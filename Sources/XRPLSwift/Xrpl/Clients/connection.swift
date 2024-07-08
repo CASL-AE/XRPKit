@@ -496,58 +496,65 @@ public class Connection {
         //        self.ws.removeAllListeners()
         connectionTimeoutID.invalidate()
         // Add new, long-term connected listeners for messages and errors
-        self.ws?.onText({ _, message in
-            self.onMessage(message: message)
-        })
-
-        // TESTING ONLY
-        // TODO: This function is only used in the MockRippled Testing Response
-        self.ws?.onBinary({ _, message in
-            let data = Data(buffer: message)
-            self.onMessage(data: data)
-        })
-        //        self.ws.on("error", (error) =>
-        //            self.emit("error", "websocket", error.message, error),
-        //        )
-        // Handle a closed connection: reconnect if it was unexpected
-        _ = self.ws?.onClose.map { _ in
-            let reason: String = "none"
-            let code: Int? = 0
-            if self.ws == nil {
-                NSLog("UNMPLEMENTED")
-                return
-            }
-            self.clearHeartbeatInterval()
-            try? self.requestManager.rejectAll(error: DisconnectedError("websocket was closed, \(reason)"))
-            //            self.ws.removeAllListeners()
-            self.ws = nil
-
-            if code == nil {
-                let reasonText = reason
-                // swiftlint:disable:next line_length
-                NSLog("Disconnected but the disconnect code was undefined (The given reason was \(reasonText)). This could be caused by an exception being thrown during a `connect` callback. Disconnecting with code 1011 to indicate an internal error has occurred.")
-
+        
+        self.ws?.eventLoop.execute {
+            self.ws?.onText({ _, message in
+                self.onMessage(message: message)
+            })
+            
+            
+            // TESTING ONLY
+            // TODO: This function is only used in the MockRippled Testing Response
+            
+            self.ws?.onBinary({ _, message in
+                let data = Data(buffer: message)
+                self.onMessage(data: data)
+            })
+            
+            //        self.ws.on("error", (error) =>
+            //            self.emit("error", "websocket", error.message, error),
+            //        )
+            // Handle a closed connection: reconnect if it was unexpected
+            _ = self.ws?.onClose.map { _ in
+                let reason: String = "none"
+                let code: Int? = 0
+                if self.ws == nil {
+                    NSLog("UNMPLEMENTED")
+                    return
+                }
+                self.clearHeartbeatInterval()
+                try? self.requestManager.rejectAll(error: DisconnectedError("websocket was closed, \(reason)"))
+                //            self.ws.removeAllListeners()
+                self.ws = nil
+                
+                if code == nil {
+                    let reasonText = reason
+                    // swiftlint:disable:next line_length
+                    NSLog("Disconnected but the disconnect code was undefined (The given reason was \(reasonText)). This could be caused by an exception being thrown during a `connect` callback. Disconnecting with code 1011 to indicate an internal error has occurred.")
+                    
+                    /*
+                     * Error code 1011 represents an Internal Error according to
+                     * https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent/code
+                     */
+                    let internalErrorCode = 1011
+                    //                self.emit("disconnected", internalErrorCode)
+                    print("disconnected: \(internalErrorCode)")
+                } else {
+                    //                self.emit("disconnected", code)
+                    guard let code = code else { return }
+                    print("disconnected: \(code)")
+                }
+                
                 /*
-                 * Error code 1011 represents an Internal Error according to
-                 * https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent/code
+                 * If this wasn"t a manual disconnect, then lets reconnect ASAP.
+                 * Code can be undefined if there"s an exception while connecting.
                  */
-                let internalErrorCode = 1011
-                //                self.emit("disconnected", internalErrorCode)
-                print("disconnected: \(internalErrorCode)")
-            } else {
-                //                self.emit("disconnected", code)
-                guard let code = code else { return }
-                print("disconnected: \(code)")
-            }
-
-            /*
-             * If this wasn"t a manual disconnect, then lets reconnect ASAP.
-             * Code can be undefined if there"s an exception while connecting.
-             */
-            if code != INTENTIONAL_DISCONNECT_CODE && code != nil {
-                self.intentionalDisconnect()
+                if code != INTENTIONAL_DISCONNECT_CODE && code != nil {
+                    self.intentionalDisconnect()
+                }
             }
         }
+        
         // Finalize the connection and resolve all awaiting connect() requests
         do {
             self.retryConnectionBackoff.reset()
