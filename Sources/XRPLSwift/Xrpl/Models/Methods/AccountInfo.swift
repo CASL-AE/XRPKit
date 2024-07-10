@@ -113,6 +113,40 @@ public class AccountInfoRequest: BaseRequest {
     }
 }
 
+public struct AccountFlags: Codable {
+    public var allowTrustLineClawback: Bool?
+    public var defaultRipple: Bool?
+    public var depositAuth: Bool?
+    public var disableMasterKey: Bool?
+    public var disallowIncomingCheck: Bool?
+    public var disallowIncomingNFTokenOffer: Bool?
+    public var disallowIncomingPayChan: Bool?
+    public var disallowIncomingTrustline: Bool?
+    public var disallowIncomingXRP: Bool?
+    public var globalFreeze: Bool?
+    public var noFreeze: Bool?
+    public var passwordSpent: Bool?
+    public var requireAuthorization: Bool?
+    public var requireDestinationTag: Bool?
+    
+    private enum CodingKeys: String, CodingKey {
+        case allowTrustLineClawback = "allowTrustLineClawback"
+        case defaultRipple = "defaultRipple"
+        case depositAuth = "depositAuth"
+        case disableMasterKey = "disableMasterKey"
+        case disallowIncomingCheck = "disallowIncomingCheck"
+        case disallowIncomingNFTokenOffer = "disallowIncomingNFTokenOffer"
+        case disallowIncomingPayChan = "disallowIncomingPayChan"
+        case disallowIncomingTrustline = "disallowIncomingTrustline"
+        case disallowIncomingXRP = "disallowIncomingXRP"
+        case globalFreeze = "globalFreeze"
+        case noFreeze = "noFreeze"
+        case passwordSpent = "passwordSpent"
+        case requireAuthorization = "requireAuthorization"
+        case requireDestinationTag = "requireDestinationTag"
+    }
+}
+
 public struct QueueTransaction: Codable {
     /**
      Whether this transaction changes this address's ways of authorizing
@@ -130,6 +164,14 @@ public struct QueueTransaction: Codable {
     public var maxSpendDrops: String
     /// The Sequence Number of this transaction.
     public var seq: Int
+    
+    private enum CodingKeys: String, CodingKey {
+        case authChange = "auth_change"
+        case fee = "fee"
+        case feeLevel = "fee_level"
+        case maxSpendDrops = "max_spend_drops"
+        case seq = "seq"
+    }
 }
 
 public struct QueueData: Codable {
@@ -153,6 +195,15 @@ public struct QueueData: Codable {
     public var maxSpendDropsTotal: String?
     /// Information about each queued transaction from this address.
     public var transactions: [QueueTransaction]?
+    
+    private enum CodingKeys: String, CodingKey {
+        case txnCount = "txn_count"
+        case authChangeQueued = "auth_change_queued"
+        case lowestSequence = "lowest_sequence"
+        case highestSequence = "highest_sequence"
+        case maxSpendDropsTotal = "max_spend_drops_total"
+        case transactions = "transactions"
+    }
 }
 
 /**
@@ -164,25 +215,22 @@ public class AccountInfoResponse: Codable {
      in the ledger.
      */
     public var accountData: LEAccountRoot
+    
     /**
      Array of SignerList ledger objects associated with this account for
      Multi-Signing. Since an account can own at most one SignerList, this
      array must have exactly one member if it is present.
      */
     public var signerLists: [LESignerList]?
+    
+    public var accountFlags: AccountFlags?
+
     /**
      The ledger index of the current in-progress ledger, which was used when
      retrieving this information.
      */
     public var ledgerCurrentIndex: Int?
-    /**
-     The ledger index of the ledger version used when retrieving this
-     information. The information does not contain any changes from ledger
-     versions newer than this one.
-     */
-    // TODO: Ledger Hash isnt listed on this object, but is returned...
-    public var ledgerIndex: Int?
-    public var ledgerHash: String?
+    
     /**
      Information about queued transactions sent by this account. This
      information describes the state of the local rippled server, which may be
@@ -195,14 +243,13 @@ public class AccountInfoResponse: Codable {
      True if this data is from a validated ledger version; if omitted or set
      to false, this data is not final.
      */
-    public var validated: Bool?
+    public var validated: Bool? // exist
 
     private enum CodingKeys: String, CodingKey {
         case accountData = "account_data"
         case signerLists = "signer_lists"
+        case accountFlags = "account_flags"
         case ledgerCurrentIndex = "ledger_current_index"
-        case ledgerIndex = "ledger_index"
-        case ledgerHash = "ledger_hash"
         case queueData = "queue_data"
         case validated = "validated"
     }
@@ -211,9 +258,8 @@ public class AccountInfoResponse: Codable {
         let values = try decoder.container(keyedBy: CodingKeys.self)
         accountData = try values.decode(LEAccountRoot.self, forKey: .accountData)
         signerLists = try values.decodeIfPresent([LESignerList].self, forKey: .signerLists)
+        accountFlags = try values.decodeIfPresent(AccountFlags.self, forKey: .accountFlags)
         ledgerCurrentIndex = try values.decodeIfPresent(Int.self, forKey: .ledgerCurrentIndex)
-        ledgerIndex = try values.decodeIfPresent(Int.self, forKey: .ledgerIndex)
-        ledgerHash = try values.decodeIfPresent(String.self, forKey: .ledgerHash)
         queueData = try values.decodeIfPresent(QueueData.self, forKey: .queueData)
         validated = try values.decodeIfPresent(Bool.self, forKey: .validated)
     }
