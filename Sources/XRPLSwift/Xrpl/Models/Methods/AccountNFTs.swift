@@ -118,7 +118,8 @@ public class AccountNFTsResponse: Codable {
      The ledger index of the current open ledger, which was used when
      retrieving this information.
      */
-    public var ledgerCurrentIndex: Int
+    public var ledgerHash: String
+    public var ledgerIndex: Int
     /// If true, this data comes from a validated ledger.
     public var validated: Bool
     /// The limit that was used to fulfill this request.
@@ -133,7 +134,8 @@ public class AccountNFTsResponse: Codable {
     enum CodingKeys: String, CodingKey {
         case account = "account"
         case accountNfts = "account_nfts"
-        case ledgerCurrentIndex = "ledger_current_index"
+        case ledgerHash = "ledger_hash"
+        case ledgerIndex = "ledger_index"
         case validated = "validated"
         case limit = "limit"
         case marker = "marker"
@@ -143,7 +145,8 @@ public class AccountNFTsResponse: Codable {
         let values = try decoder.container(keyedBy: CodingKeys.self)
         account = try values.decode(String.self, forKey: .account)
         accountNfts = try values.decode([AccountNFToken].self, forKey: .accountNfts)
-        ledgerCurrentIndex = try values.decode(Int.self, forKey: .ledgerCurrentIndex)
+        ledgerHash = try values.decode(String.self, forKey: .ledgerHash)
+        ledgerIndex = try values.decode(Int.self, forKey: .ledgerIndex)
         validated = try values.decode(Bool.self, forKey: .validated)
         limit = try values.decodeIfPresent(Int.self, forKey: .limit)
         marker = try values.decodeIfPresent(AnyCodable.self, forKey: .marker)
