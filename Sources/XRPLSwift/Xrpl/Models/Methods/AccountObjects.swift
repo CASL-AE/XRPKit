@@ -279,12 +279,12 @@ public class AccountObjectsResponse: Codable {
         let values = try decoder.container(keyedBy: CodingKeys.self)
         account = try values.decode(String.self, forKey: .account)
         accountObjects = try values.decode([AccountObject].self, forKey: .accountObjects)
-        ledgerHash = try? values.decode(String.self, forKey: .ledgerHash)
-        ledgerIndex = try? values.decode(Int.self, forKey: .ledgerIndex)
-        ledgerCurrentIndex = try? values.decode(Int.self, forKey: .ledgerCurrentIndex)
-        limit = try? values.decode(Int.self, forKey: .limit)
-        marker = try? values.decode(AnyCodable.self, forKey: .marker)
-        validated = try? values.decode(Bool.self, forKey: .validated)
+        ledgerHash = try? values.decodeIfPresent(String.self, forKey: .ledgerHash)
+        ledgerIndex = try? values.decodeIfPresent(Int.self, forKey: .ledgerIndex)
+        ledgerCurrentIndex = try? values.decodeIfPresent(Int.self, forKey: .ledgerCurrentIndex)
+        limit = try? values.decodeIfPresent(Int.self, forKey: .limit)
+        marker = try? values.decodeIfPresent(AnyCodable.self, forKey: .marker)
+        validated = try? values.decodeIfPresent(Bool.self, forKey: .validated)
         //        try super.init(from: decoder)
     }
 
