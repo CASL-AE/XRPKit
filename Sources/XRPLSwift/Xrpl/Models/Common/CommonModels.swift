@@ -214,12 +214,22 @@ public class Memo: Codable {
         memoType = try values.decodeIfPresent(String.self, forKey: .memoType)
         memoFormat = try values.decodeIfPresent(String.self, forKey: .memoFormat)
     }
+    
+    public init(_ memoData: String?, _ memoType: String?, _ memoFormat: String?) {
+        self.memoData = memoData
+        self.memoType = memoType
+        self.memoFormat = memoFormat
+    }
 }
 
 public class MemoWrapper: Codable {
     public var memo: Memo
     enum CodingKeys: String, CodingKey {
         case memo = "Memo"
+    }
+    
+    public init(_ memo: Memo) {
+        self.memo = memo
     }
 }
 
