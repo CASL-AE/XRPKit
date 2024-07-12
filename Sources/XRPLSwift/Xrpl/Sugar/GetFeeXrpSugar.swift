@@ -28,9 +28,11 @@ public func getFeeXrp(
     let feeCushion = cushion ?? client.feeCushion
 
     let request = try ServerInfoRequest(["command": "server_info"] as [String: AnyObject])
-    let response = try await client.request(request).wait() as? BaseResponse<ServerInfoResponse>
-    guard let response = response else { throw XrplError("Invalid Response") }
-    guard let result = response.result else { throw XrplError("Invalid Result") }
+    let response = try await client.request(request).get() as? BaseResponse<ServerInfoResponse>
+    guard let response = response else { throw XrplError("Invalid Response, getFeeXrp") }
+    guard let result = response.result else {
+        throw XrplError("Invalid Result, getFeeXrp")
+    }
 
     let serverInfo = result.info
     guard let baseFee = serverInfo.validatedLedger?.baseFeeXrp else {

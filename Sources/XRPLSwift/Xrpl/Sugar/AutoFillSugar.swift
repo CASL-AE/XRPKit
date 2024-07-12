@@ -19,6 +19,8 @@ public class AutoFillSugar {
         public let classicAccount: String
         public let tag: Int? // JM: Int | Bool only false?
     }
+    
+    public init() {}
 
     /**
      Autofills fields in a transaction. This will set `Sequence`, `Fee`,
@@ -32,7 +34,7 @@ public class AutoFillSugar {
      - returns
      The autofilled transaction.
      */
-    func autofill(
+    public func autofill(
         _ client: XrplClient,
         _ transaction: [String: AnyObject],
         _ signersCount: Int?
@@ -60,6 +62,15 @@ public class AutoFillSugar {
         _ = promises.compactMap({ $0 })
         promise.succeed(tx)
         return promise.futureResult
+    }
+    
+    public func autofill(
+        _ client: XrplClient,
+        _ transaction: Transaction,
+        _ signersCount: Int?
+    ) async throws -> EventLoopFuture<[String: AnyObject]> {
+        let encodedTx = try! transaction.toJson()
+        return try await self.autofill(client, encodedTx, signersCount)
     }
 
     func setValidAddresses(_ tx: inout [String: AnyObject]) throws {
