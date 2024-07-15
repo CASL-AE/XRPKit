@@ -130,20 +130,20 @@ public struct AccountFlags: Codable {
     public var requireDestinationTag: Bool?
     
     private enum CodingKeys: String, CodingKey {
-        case allowTrustLineClawback = "allowTrustLineClawback"
-        case defaultRipple = "defaultRipple"
-        case depositAuth = "depositAuth"
-        case disableMasterKey = "disableMasterKey"
-        case disallowIncomingCheck = "disallowIncomingCheck"
-        case disallowIncomingNFTokenOffer = "disallowIncomingNFTokenOffer"
-        case disallowIncomingPayChan = "disallowIncomingPayChan"
-        case disallowIncomingTrustline = "disallowIncomingTrustline"
-        case disallowIncomingXRP = "disallowIncomingXRP"
-        case globalFreeze = "globalFreeze"
-        case noFreeze = "noFreeze"
-        case passwordSpent = "passwordSpent"
-        case requireAuthorization = "requireAuthorization"
-        case requireDestinationTag = "requireDestinationTag"
+        case allowTrustLineClawback
+        case defaultRipple
+        case depositAuth
+        case disableMasterKey
+        case disallowIncomingCheck
+        case disallowIncomingNFTokenOffer
+        case disallowIncomingPayChan
+        case disallowIncomingTrustline
+        case disallowIncomingXRP
+        case globalFreeze
+        case noFreeze
+        case passwordSpent
+        case requireAuthorization
+        case requireDestinationTag
     }
 }
 
