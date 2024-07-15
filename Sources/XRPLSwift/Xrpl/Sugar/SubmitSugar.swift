@@ -289,7 +289,6 @@ func getSignedTx(
     if autofill {
         tx = try await AutoFillSugar().autofill(client, tx, 0).wait()
     }
-    debugPrint("autofilled tx:", tx)
     return try wallet.sign(tx, false).txBlob
 }
 

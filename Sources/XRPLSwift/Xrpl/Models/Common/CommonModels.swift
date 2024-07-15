@@ -10,25 +10,15 @@
 import Foundation
 
 public enum AccountObjectType: String, Codable {
-    case check
-    case depositPreauth
-    case escrow
-    case offer
-    case paymentChannel
-    case signerList
-    case ticket
-    case state
-
-    enum CodingKeys: String, CodingKey {
-        case check = "check"
-        case depositPreauth = "deposit_preauth"
-        case escrow = "escrow"
-        case offer = "offer"
-        case paymentChannel = "paymentChannel"
-        case signerList = "signerList"
-        case ticket = "ticket"
-        case state = "state"
-    }
+    case check = "check"
+    case depositPreauth = "deposit_preauth"
+    case escrow = "escrow"
+    case offer = "offer"
+    case paymentChannel = "paymentChannel"
+    case signerList = "signerList"
+    case ticket = "ticket"
+    case state = "state"
+    case nftOffer = "nft_offer"
 }
 
 public enum LedgerIndex: Codable {

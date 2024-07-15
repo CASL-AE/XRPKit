@@ -145,7 +145,7 @@ public class RequestManager {
      */
     // swiftlint:disable:next cyclomatic_complexity
     public func handleResponse(response: [String: AnyObject]?) throws {
-        //        NSLog("RESPONSE: \(response)")
+//        NSLog("RESPONSE: \(response)")
         let decoder = JSONDecoder()
         let baseData = try JSONSerialization.data(withJSONObject: response!, options: .prettyPrinted)
         let baseResponse = try RippleBaseResponse(data: baseData)

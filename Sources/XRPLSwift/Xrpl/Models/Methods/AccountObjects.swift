@@ -23,7 +23,8 @@ public enum AccountObject: Codable {
     case signerList(LESignerList)
     case ticket(LETicket)
     case rippleState(LERippleState)
-
+    case nftOffer(LENFTOffer)
+    
     public func toAny() -> Any {
         switch self {
         case .check(let check):
@@ -42,6 +43,8 @@ public enum AccountObject: Codable {
             return ticket
         case .rippleState(let rippleState):
             return rippleState
+        case .nftOffer(let nftOffer):
+            return nftOffer
         }
     }
 }
@@ -83,6 +86,10 @@ extension AccountObject {
             self = .rippleState(value)
             return
         }
+        if let value = try? LENFTOffer(from: decoder) {
+            self = .nftOffer(value)
+            return
+        }
         throw AccountObjectCodingError.decoding("AccountObject has not been mapped")
     }
 
@@ -104,6 +111,8 @@ extension AccountObject {
             try ticket.encode(to: encoder)
         case .rippleState(let rippleState):
             try rippleState.encode(to: encoder)
+        case .nftOffer(let nftOffer):
+            try nftOffer.encode(to: encoder)
         }
     }
 }
