@@ -218,7 +218,7 @@ public class AccountTxResponse: Codable {
     public var validated: Bool?
 
     /*The limit value used in the request. */
-    public var limit: Int
+    public var limit: Int?
     /**
      Server-defined value indicating the response is paginated. Pass this
      to the next call to resume where this call left off.
@@ -242,7 +242,7 @@ public class AccountTxResponse: Codable {
         ledgerIndexMin = try values.decode(Int.self, forKey: .ledgerIndexMin)
         ledgerIndexMax = try values.decode(Int.self, forKey: .ledgerIndexMax)
         validated = try values.decodeIfPresent(Bool.self, forKey: .validated)
-        limit = try values.decode(Int.self, forKey: .limit)
+        limit = try values.decodeIfPresent(Int.self, forKey: .limit)
         marker = try values.decodeIfPresent(AnyCodable.self, forKey: .marker)
         //        try super.init(from: decoder)
     }

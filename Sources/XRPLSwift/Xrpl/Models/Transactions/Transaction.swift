@@ -53,7 +53,7 @@ extension Transaction {
         case decoding(String)
     }
 
-    func toData() throws -> Data {
+    public func toData() throws -> Data {
         return try JSONEncoder().encode(self)
     }
 
@@ -153,7 +153,7 @@ extension Transaction {
         throw TransactionCodingError.decoding("Invalid Transaction Type")
     }
 
-    func toJson() throws -> [String: AnyObject] {
+    public func toJson() throws -> [String: AnyObject] {
         let data = try JSONEncoder().encode(self)
         let jsonResult = try JSONSerialization.jsonObject(with: data, options: .mutableLeaves)
         return jsonResult as! [String: AnyObject]

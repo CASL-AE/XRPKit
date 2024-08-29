@@ -120,6 +120,9 @@ public class Payment: BaseTransaction, XrplTransaction {
      Only valid if this is a partial payment. If omitted, any positive amount
      is considered a success.
      */
+    
+    public var date: Int?
+    public var hash: String?
 
     enum CodingKeys: String, CodingKey {
         case amount = "Amount"
@@ -129,6 +132,8 @@ public class Payment: BaseTransaction, XrplTransaction {
         case paths = "Paths"
         case sendMax = "SendMax"
         case deliverMin = "DeliverMin"
+        case date = "date"
+        case hash = "hash"
     }
 
     public init(
@@ -161,6 +166,8 @@ public class Payment: BaseTransaction, XrplTransaction {
         self.paths = decoded.paths
         self.sendMax = decoded.sendMax
         self.deliverMin = decoded.deliverMin
+        self.date = decoded.date
+        self.hash = decoded.hash
         try super.init(json: json)
     }
 
@@ -173,6 +180,8 @@ public class Payment: BaseTransaction, XrplTransaction {
         paths = try values.decodeIfPresent([Path].self, forKey: .paths)
         sendMax = try values.decodeIfPresent(Amount.self, forKey: .sendMax)
         deliverMin = try values.decodeIfPresent(Amount.self, forKey: .deliverMin)
+        date = try values.decodeIfPresent(Int.self, forKey: .date)
+        hash = try values.decodeIfPresent(String.self, forKey: .hash)
         try super.init(from: decoder)
     }
 
