@@ -239,17 +239,11 @@ public class AccountTxResponse: Codable {
         let values = try decoder.container(keyedBy: CodingKeys.self)
         account = try values.decode(String.self, forKey: .account)
         transactions = try values.decode([AccountTransaction].self, forKey: .transactions)
-        debugPrint("ledgerIndexMin")
         ledgerIndexMin = try values.decode(Int.self, forKey: .ledgerIndexMin)
-        debugPrint("ledgerIndexMax")
         ledgerIndexMax = try values.decode(Int.self, forKey: .ledgerIndexMax)
-        debugPrint("validated")
         validated = try values.decodeIfPresent(Bool.self, forKey: .validated)
-        debugPrint("limit")
         limit = try values.decodeIfPresent(Int.self, forKey: .limit)
-        debugPrint("marker")
         marker = try values.decodeIfPresent(AnyCodable.self, forKey: .marker)
-        debugPrint("safe AccountTxResponse")
         //        try super.init(from: decoder)
     }
 
