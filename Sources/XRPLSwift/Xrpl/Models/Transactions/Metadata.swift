@@ -16,6 +16,8 @@ public struct AccountRootNodeField: Codable {
     public var flags: Int?
     public var ownerCount: Int?
     public var sequence: Int?
+    public var previousTxnID: String?
+    public var previousTxnLgrSeq: Int?
 
     enum CodingKeys: String, CodingKey {
         case account = "Account"
@@ -23,6 +25,8 @@ public struct AccountRootNodeField: Codable {
         case flags = "Flags"
         case ownerCount = "OwnerCount"
         case sequence = "Sequence"
+        case previousTxnID = "PreviousTxnID"
+        case previousTxnLgrSeq = "PreviousTxnLgrSeq"
     }
 
     public init(from decoder: Decoder) throws {
@@ -32,6 +36,8 @@ public struct AccountRootNodeField: Codable {
         flags = try values.decodeIfPresent(Int.self, forKey: .flags)
         ownerCount = try values.decodeIfPresent(Int.self, forKey: .ownerCount)
         sequence = try values.decodeIfPresent(Int.self, forKey: .sequence)
+        previousTxnID = try values.decodeIfPresent(String.self, forKey: .previousTxnID)
+        previousTxnLgrSeq = try values.decodeIfPresent(Int.self, forKey: .previousTxnLgrSeq)
     }
 }
 
@@ -143,7 +149,7 @@ public enum FinalField: Codable {
 }
 
 public struct ModifiedNodeData: Codable {
-    public var ledgerEntryType: String
+    public var ledgerEntryType: LedgerEntryType
     public var ledgerIndex: String
     public var finalFields: FinalField?
     public var previousFields: FinalField?
@@ -183,15 +189,38 @@ public struct ModifiedNode: Codable {
     }
 }
 
-public struct DeletedNode: Codable {
+public struct DeletedNodeData: Codable {
     public var ledgerEntryType: LedgerEntryType
     public var ledgerIndex: String
-    public var finalFields: [FinalField]?
+    public var finalFields: FinalField?
+    public var previousFields: FinalField?
 
     enum CodingKeys: String, CodingKey {
         case ledgerEntryType = "LedgerEntryType"
         case ledgerIndex = "LedgerIndex"
         case finalFields = "FinalFields"
+        case previousFields = "PreviousFields"
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        ledgerEntryType = try values.decode(LedgerEntryType.self, forKey: .ledgerEntryType)
+        ledgerIndex = try values.decode(String.self, forKey: .ledgerIndex)
+        finalFields = try values.decodeIfPresent(FinalField.self, forKey: .finalFields)
+        previousFields = try values.decodeIfPresent(FinalField.self, forKey: .previousFields)
+    }
+}
+
+public struct DeletedNode: Codable {
+    public var deletedNode: DeletedNodeData
+
+    enum CodingKeys: String, CodingKey {
+        case deletedNode = "DeletedNode"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        deletedNode = try values.decode(DeletedNodeData.self, forKey: .deletedNode)
     }
 }
 
@@ -219,6 +248,7 @@ extension Node {
             self = .deleted(value)
             return
         }
+
         throw NodeCodingError.decoding("The Node has not been mapped.")
     }
 
