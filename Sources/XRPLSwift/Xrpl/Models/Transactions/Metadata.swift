@@ -12,7 +12,7 @@ import Foundation
 
 public struct AccountRootNodeField: Codable {
     public var account: String?
-    public var balance: String?
+    public var balance: Amount?
     public var flags: Int?
     public var ownerCount: Int?
     public var sequence: Int?
@@ -32,7 +32,7 @@ public struct AccountRootNodeField: Codable {
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
         account = try values.decodeIfPresent(String.self, forKey: .account)
-        balance = try values.decodeIfPresent(String.self, forKey: .balance)
+        balance = try values.decodeIfPresent(Amount.self, forKey: .balance)
         flags = try values.decodeIfPresent(Int.self, forKey: .flags)
         ownerCount = try values.decodeIfPresent(Int.self, forKey: .ownerCount)
         sequence = try values.decodeIfPresent(Int.self, forKey: .sequence)
