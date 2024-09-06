@@ -305,12 +305,15 @@ public class Connection {
         //        this.ws.on('error', (error) => this.onConnectionFailed(error))
         //        this.ws.on('error', () => clearTimeout(connectionTimeoutID))
 
-        self.ws?.onClose.whenFailure({ error in
-            self.onConnectionFailed(errorOrCode: error)
-        })
-        self.ws?.onClose.whenSuccess({ _ in
-            connectionTimeoutID.invalidate()
-        })
+        self.ws?.eventLoop.execute {
+            self.ws?.onClose.whenFailure({ error in
+                self.onConnectionFailed(errorOrCode: error)
+            })
+            self.ws?.onClose.whenSuccess({ _ in
+                connectionTimeoutID.invalidate()
+            })
+        }
+        
         return await self.connectionManager.awaitConnection()
     }
 

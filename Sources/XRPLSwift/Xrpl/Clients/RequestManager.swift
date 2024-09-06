@@ -24,7 +24,7 @@ struct RequestMap<T> {
  */
 public class RequestManager {
     private var nextId = 0
-    private var promisesAwaitingResponse: [Int: RequestMap<Any>] = [:]
+    private var promisesAwaitingResponse = SafeDict<Int, RequestMap<Any>>()
 
     /**
      * Successfully resolves a request.
@@ -34,20 +34,26 @@ public class RequestManager {
      * @throws Error if no existing promise with the given ID.
      */
     public func resolve(_ id: Int, _ response: Any?, _ error: Error?) throws {
-        guard let index = self.promisesAwaitingResponse.firstIndex(where: { $0.key == id }) else {
+        guard let index = self.promisesAwaitingResponse.firstIndex(id) else {
             throw XrplError("No existing promise with id \(id)")
         }
-        let map = self.promisesAwaitingResponse[index].value
+        
+        guard let map = self.promisesAwaitingResponse.getByIndex(index) else { return }
+        
         map.timer.invalidate()
         map.promise.succeed(response!)
         self.deletePromise(id: id)
     }
 
     public func resolve(id: Int, error: Any) throws {
-        guard let index = self.promisesAwaitingResponse.firstIndex(where: { $0.key == id }) else {
+        guard let index = self.promisesAwaitingResponse.firstIndex(id) else {
             throw XrplError("No existing promise with id \(id)")
         }
-        let map = self.promisesAwaitingResponse[index].value
+        
+        guard let map = self.promisesAwaitingResponse.getByIndex(index) else {
+            return
+        }
+
         map.timer.invalidate()
         map.promise.succeed(error)
         self.deletePromise(id: id)
@@ -61,10 +67,12 @@ public class RequestManager {
      * @throws Error if no existing promise with the given ID.
      */
     public func reject(id: Int, error: Error) throws {
-        guard let index = self.promisesAwaitingResponse.firstIndex(where: { $0.key == id }) else {
+        guard let index = self.promisesAwaitingResponse.firstIndex(id) else {
             throw XrplError("No existing promise with id \(id)")
         }
-        let map = self.promisesAwaitingResponse[index].value
+        
+        guard let map = self.promisesAwaitingResponse.getByIndex(index) else { return }
+            
         map.timer.invalidate()
         // TODO: figure out how to have a better stack trace for an error
         map.promise.fail(error)
@@ -77,9 +85,9 @@ public class RequestManager {
      * @param error - Error to throw with the reject.
      */
     public func rejectAll(error: Error) throws {
-        try self.promisesAwaitingResponse.forEach { (key: Int, _: RequestMap) in
+        try? self.promisesAwaitingResponse.keys().forEach { (key: Int) in
             try self.reject(id: key, error: error)
-            self.deletePromise(id: key)
+//            self.deletePromise(id: key)
         }
     }
 
@@ -102,7 +110,7 @@ public class RequestManager {
         request: R,
         timeout: Int
     ) throws -> (Int, String, EventLoopFuture<Any>) {
-        var newId: Int
+        var newId = 0
         if request.id == nil {
             newId = self.nextId
             self.nextId += 1
@@ -110,8 +118,12 @@ public class RequestManager {
             newId = request.id!
         }
         request.id = newId
+
         let encoder = JSONEncoder()
-        let newRequest = try! encoder.encode(request).to(type: String.self)
+        guard let newRequest = try? encoder.encode(request).to(type: String.self) else {
+            throw XrplError("request encoding error on `\(newId)`")
+        }
+
         let timer = Timer.scheduledTimer(withTimeInterval: Double(timeout), repeats: false) { _ in
             Task {
                 try! self.reject(id: self.nextId, error: TimeoutError("Timeout Error"))
@@ -126,13 +138,14 @@ public class RequestManager {
         //      timer.unref()
         //    }
 
-        if self.promisesAwaitingResponse.contains(where: { $0.key == newId }) {
+        if self.promisesAwaitingResponse.contains(key: newId) {
             throw XrplError("Response with id `\(newId)` is already pending")
         }
 
         let newPromise = eventGroup.next().makePromise(of: Any.self)
         let reqMap = RequestMap<Any>(timer: timer, promise: newPromise, requestType: R.self)
-        self.promisesAwaitingResponse[newId] = reqMap
+        self.promisesAwaitingResponse.set(key: newId, value: reqMap)
+        
         return (newId, newRequest, newPromise.futureResult)
     }
 
@@ -149,13 +162,10 @@ public class RequestManager {
         let decoder = JSONDecoder()
         let baseData = try JSONSerialization.data(withJSONObject: response!, options: .prettyPrinted)
         let baseResponse = try RippleBaseResponse(data: baseData)
-        if baseResponse.id == nil || !(baseResponse.id is String || baseResponse.id is Int) {
-            throw ValidationError("valid id not found in response")
-        }
-        guard let index = self.promisesAwaitingResponse.firstIndex(where: { $0.key == baseResponse.id }) else {
-            return
-            //            throw XrplError.noPromise("No existing promise with id \(response.id)")
-        }
+
+        var isIndexInited = false
+        guard let index = self.promisesAwaitingResponse.firstIndex(baseResponse.id) else { return }
+
         if baseResponse.status == nil {
             let error: XrplError = ValidationError("valid id not found in response")
             try self.reject(id: baseResponse.id, error: error)
@@ -182,7 +192,8 @@ public class RequestManager {
             return
         }
 
-        let map = self.promisesAwaitingResponse[index].value
+        guard let map = self.promisesAwaitingResponse.getByIndex(index) else { return }
+        
         let jsonData = try JSONSerialization.data(
             withJSONObject: response!["result"] as! [String: AnyObject],
             options: .prettyPrinted
@@ -469,8 +480,6 @@ public class RequestManager {
      * @param id - ID of the request.
      */
     private func deletePromise(id: Int) {
-        if let index = self.promisesAwaitingResponse.firstIndex(where: { $0.key == id }) {
-            self.promisesAwaitingResponse.remove(at: index)
-        }
+        self.promisesAwaitingResponse.remove(key: id)
     }
 }
