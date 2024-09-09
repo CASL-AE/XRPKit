@@ -44,7 +44,7 @@ public class AccountDelete: BaseTransaction {
         self.destination = destination
         // Optional
         self.destinationTag = destinationTag
-        super.init(account: "", transactionType: "AccountSet")
+        super.init(account: "", transactionType: "AccountDelete")
     }
 
     override public init(json: [String: AnyObject]) throws {

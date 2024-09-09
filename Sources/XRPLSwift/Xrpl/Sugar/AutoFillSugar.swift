@@ -139,16 +139,19 @@ public class AutoFillSugar {
         _ tx: inout [String: AnyObject]
     ) async {
         let request = AccountInfoRequest(account: tx["Account"] as! String, ledgerIndex: .string("current"))
-        let response = try! await client.request(r: request).wait() as? BaseResponse<AccountInfoResponse>
+        let response = try! await client.request(r: request).get() as? BaseResponse<AccountInfoResponse>
         tx["Sequence"] = response!.result?.accountData.sequence as AnyObject
     }
 
     func fetchAccountDeleteFee(_ client: XrplClient) async -> Double {
         let request = ServerStateRequest()
-        let response = try! await client.request(request).wait() as? BaseResponse<ServerStateResponse>
-        let fee = response!.result?.state.validatedLedger?.reserveIncXrp
+        guard let response = try? await client.request(request).get() as? BaseResponse<ServerStateResponse> else {
+            return 2 * 1000000
+        }
+        
+        let fee = response.result?.state.validatedLedger?.reserveIncXrp
         if fee == nil {
-            //        return Promise.reject(XrplError("Could not fetch Owner Reserve."))
+            return 2 * 1000000
         }
         return Double(fee!)
     }
