@@ -82,6 +82,34 @@ public struct TrustSetFlagsInterface {
     public var tfSetFreeze: Bool?
     /** Unfreeze the trust line. */
     public var tfClearFreeze: Bool?
+    
+    public init(
+        tfSetAuth: Bool? = nil,
+        tfSetNoRipple: Bool? = nil,
+        tfClearNoRipple: Bool? = nil,
+        tfSetFreeze: Bool? = nil,
+        tfClearFreeze: Bool? = nil
+    ) {
+        if self.tfSetfAuth != nil {
+            self.tfSetfAuth = tfSetAuth
+        }
+        
+        if self.tfSetNoRipple != nil {
+            self.tfSetNoRipple = tfSetNoRipple
+        }
+        
+        if self.tfClearNoRipple != nil {
+            self.tfClearNoRipple = tfClearNoRipple
+        }
+        
+        if self.tfSetFreeze != nil {
+            self.tfSetFreeze = tfSetFreeze
+        }
+        
+        if self.tfClearFreeze != nil {
+            self.tfClearFreeze = tfClearFreeze
+        }
+    }
 }
 
 public class TrustSet: BaseTransaction {
