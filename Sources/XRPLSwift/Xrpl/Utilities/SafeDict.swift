@@ -66,8 +66,12 @@ class SafeDict<Key: Hashable, Value> {
 
     func set(key: Key, value: Value?) {
         dispatchQueue.sync {
-            self.threadUnsafeDict.removeValue(forKey: key) // added for preventing crash against below
-            self.threadUnsafeDict[key] = value
+            self.threadUnsafeDict.removeValue(forKey: key)
+
+            // added for preventing crash against below
+            if let value {
+                self.threadUnsafeDict.updateValue(value, forKey: key)
+            }
         }
     }
     
