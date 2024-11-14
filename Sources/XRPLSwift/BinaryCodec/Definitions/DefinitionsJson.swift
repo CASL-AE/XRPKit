@@ -1308,6 +1308,16 @@ let serializerDefinitions = """
       }
     ],
     [
+      "DeliverMax",
+      {
+        "nth": 1,
+        "isVLEncoded": false,
+        "isSerialized": true,
+        "isSigningField": true,
+        "type": "Amount"
+      }
+    ],
+    [
       "MinimumOffer",
       {
         "nth": 16,
