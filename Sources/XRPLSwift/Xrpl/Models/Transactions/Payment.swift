@@ -73,7 +73,7 @@ public class Payment: BaseTransaction, XrplTransaction {
      <http://xrpl.local/payment.html#creating-accounts>`_.
      */
 
-    public var amount: Amount
+    public var amount: Amount?
     /*
      The amount of currency to deliver. If the Partial Payment flag is set,
      deliver *up to* this amount instead. This field is required.
@@ -175,11 +175,18 @@ public class Payment: BaseTransaction, XrplTransaction {
         self.date = decoded.date
         self.hash = decoded.hash
         try super.init(json: json)
+        try validateAmount()
+    }
+    
+    func validateAmount() throws {
+        if self.amount == nil && self.deliverMax == nil {
+            throw Transaction.TransactionCodingError.decoding("Invalid Transaction Type")
+        }
     }
 
     public required init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
-        amount = try values.decode(Amount.self, forKey: .amount)
+        amount = try values.decodeIfPresent(Amount.self, forKey: .amount)
         destination = try values.decode(String.self, forKey: .destination)
         destinationTag = try values.decodeIfPresent(Int.self, forKey: .destinationTag)
         invoiceId = try values.decodeIfPresent(String.self, forKey: .invoiceId)
@@ -190,6 +197,7 @@ public class Payment: BaseTransaction, XrplTransaction {
         date = try values.decodeIfPresent(Int.self, forKey: .date)
         hash = try values.decodeIfPresent(String.self, forKey: .hash)
         try super.init(from: decoder)
+        try validateAmount()
     }
 
     override public func encode(to encoder: Encoder) throws {
