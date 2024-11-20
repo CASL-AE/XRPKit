@@ -12,6 +12,7 @@ import Foundation
 // https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki
 
 enum MnemonicsError: Error, Equatable {
+    case noWordListOfLanguage(language: WordList)
     case notInDictionary(word: String)
     case checksumMismatch
 }
@@ -21,6 +22,17 @@ public final class Bip39Mnemonic {
         case normal = 128
         case hight = 256
     }
+    
+    static let mnemonicWordsDictionaryWholeList = [
+        WordList.english: Dictionary(uniqueKeysWithValues: zip(WordList.english.words, 0..<UInt16.max)),
+        WordList.french: Dictionary(uniqueKeysWithValues: zip(WordList.french.words, 0..<UInt16.max)),
+        WordList.italian: Dictionary(uniqueKeysWithValues: zip(WordList.italian.words, 0..<UInt16.max)),
+        WordList.japanese: Dictionary(uniqueKeysWithValues: zip(WordList.japanese.words, 0..<UInt16.max)),
+        WordList.korean: Dictionary(uniqueKeysWithValues: zip(WordList.korean.words, 0..<UInt16.max)),
+        WordList.simplifiedChinese: Dictionary(uniqueKeysWithValues: zip(WordList.simplifiedChinese.words, 0..<UInt16.max)),
+        WordList.spanish: Dictionary(uniqueKeysWithValues: zip(WordList.spanish.words, 0..<UInt16.max)),
+        WordList.traditionalChinese: Dictionary(uniqueKeysWithValues: zip(WordList.traditionalChinese.words, 0..<UInt16.max)),
+    ]
 
     public static func create(strength: Strength = .normal, language: WordList = .english) throws -> String {
         let byteCount = strength.rawValue / 8
@@ -62,39 +74,32 @@ public final class Bip39Mnemonic {
     }
     
     static func validateMnemonics(_ mnemonics: String, _ language: WordList = .english) throws {
-        var decodedMnemonics = [Bit]()
-        
         // 1. All words are in the mnemonic dictionary
-
-        var mnemonicWordsDictionary = [String: UInt16]()
-        for (idx, word) in language.words.enumerated() {
-            mnemonicWordsDictionary[word] = UInt16(idx)
+        guard let mnemonicWordsDictionary = mnemonicWordsDictionaryWholeList[language] else {
+            throw MnemonicsError.noWordListOfLanguage(language: language)
         }
-        
-        let mnemonicWords = mnemonics.split(separator: " ").map { String($0) }
-        for mnemonic in mnemonicWords {
-            if mnemonicWordsDictionary[mnemonic] == nil {
-                throw MnemonicsError.notInDictionary(word: mnemonic)
+
+        var decodedBits = [Bit]()
+        let mnemonicWords = mnemonics.split(separator: " ").map(String.init)
+        for word in mnemonicWords {
+            guard let index = mnemonicWordsDictionary[word] else {
+                throw MnemonicsError.notInDictionary(word: word)
             }
             
             // organize entropy data
-            let unitBits = to11Bits(fromByte: mnemonicWordsDictionary[mnemonic]!)
-            decodedMnemonics.append(contentsOf: unitBits)
+            decodedBits.append(contentsOf: to11Bits(fromByte: index))
         }
 
         // 2. Checksum correctness
 
-        let entropyLen = decodedMnemonics.count * 32 / 33
+        let entropyBitLength = decodedBits.count * 32 / 33
+        let entropyBits = Array(decodedBits[..<entropyBitLength])
+        let expectedChecksumBits = Array(decodedBits[entropyBitLength...])
 
-        let entropy = toData(fromBits: [Bit](decodedMnemonics[..<entropyLen]))
-        let checksum = [Bit](decodedMnemonics[entropyLen...])
-
-        let checksumFromEntropy = toBits(fromByte: entropy.sha256())
-
-        for i in 0..<checksum.count {
-            if checksum[i] != checksumFromEntropy[i] {
-                throw MnemonicsError.checksumMismatch
-            }
+        let checksum = toBits(fromByte: toData(fromBits: entropyBits).sha256())
+        
+        guard expectedChecksumBits == Array(checksum[0..<decodedBits.count / 33]) else {
+            throw MnemonicsError.checksumMismatch
         }
     }
 }
