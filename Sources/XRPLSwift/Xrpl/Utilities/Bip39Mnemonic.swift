@@ -73,7 +73,7 @@ public final class Bip39Mnemonic {
         return PBKDF2SHA512(password: password.bytes, salt: salt.bytes)
     }
     
-    static func validateMnemonics(_ mnemonics: String, _ language: WordList = .english) throws {
+    public static func validateMnemonics(_ mnemonics: String, _ language: WordList = .english) throws {
         // 1. All words are in the mnemonic dictionary
         guard let mnemonicWordsDictionary = mnemonicWordsDictionaryWholeList[language] else {
             throw MnemonicsError.noWordListOfLanguage(language: language)
