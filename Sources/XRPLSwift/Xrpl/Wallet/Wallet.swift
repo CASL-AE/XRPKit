@@ -208,7 +208,7 @@ public class Wallet {
         //            throw ValidationError("Unable to parse the given mnemonic using bip39 encoding")
         //        }
 
-        let seed = Bip39Mnemonic.createSeed(mnemonic: mnemonic)
+        let seed = try Bip39Mnemonic.createSeed(mnemonic: mnemonic)
         let node = PrivateKey(seed: seed, coin: .bitcoin)
 
         if node.publicKey.isEmpty {
