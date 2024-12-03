@@ -168,12 +168,12 @@ public class WalletSigner: Wallet {
         return BigUInt(hex, radix: numberOfBitsInHex)!
     }
 
-    static func getDecodedTransaction(_ tx: String) -> Transaction {
+    public static func getDecodedTransaction(_ tx: String) -> Transaction {
         let decoded: [String: AnyObject] = BinaryCodec.decode(tx)
         return try! Transaction(decoded)!
     }
 
-    static func getDecodedTransaction(_ tx: Transaction) -> Transaction {
+    public static func getDecodedTransaction(_ tx: Transaction) -> Transaction {
         let encoded = try! BinaryCodec.encode(tx.toJson())
         let decoded: [String: AnyObject] = BinaryCodec.decode(encoded)
         return try! Transaction(decoded)!
