@@ -92,7 +92,7 @@ public class InfoLedger: Codable {
      Amount of XRP (not drops) added to the account reserve for each
      object an account owns in the ledger.
      */
-    public var reserveIncXrp: Int
+    public var reserveIncXrp: Double
     /// The ledger index of the latest validated ledger.
     public var seq: Int
 
