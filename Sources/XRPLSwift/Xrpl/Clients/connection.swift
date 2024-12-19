@@ -208,7 +208,7 @@ public class Connection {
     internal var trace: ConsoleLog?
 
     internal let url: String?
-    internal var ws: WebSocket?
+    public var ws: WebSocket?
     private var reconnectTimeoutID: Timer?
     private var heartbeatIntervalID: Timer?
     private let retryConnectionBackoff = ExponentialBackoff(
