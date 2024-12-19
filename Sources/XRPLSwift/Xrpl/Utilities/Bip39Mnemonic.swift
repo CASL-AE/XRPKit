@@ -78,87 +78,95 @@ public final class Bip39Mnemonic {
         guard let mnemonicWordsDictionary = mnemonicWordsDictionaryWholeList[language] else {
             throw MnemonicsError.noWordListOfLanguage(language: language)
         }
-
-        var decodedBits = [Bit]()
+        
         let mnemonicWords = mnemonics.split(separator: " ").map(String.init)
+        let fullBitLength = mnemonicWords.count * 11
+        let entropyBitLength = fullBitLength * 32 / 33
+        let checksumBitLength = fullBitLength - entropyBitLength
+
+        var entropyBits = Data()
+        var expectedChecksumBits = Data()
+        
+        // bitIdx: an index of the whole bit (0 ~ mnemonicWords.count * 11)
+        // unitByteIdx: a bit index of the unit byte (1 ~ 8)
+        // unitByte: a unit member of the data ([UInt8])
+        var bitIdx = 0
+        var unitByteIdx = 0
+        var unitByte: UInt8 = 0
+        
+        // streaming bits to entropy & checksum
         for word in mnemonicWords {
             guard let index = mnemonicWordsDictionary[word] else {
                 throw MnemonicsError.notInDictionary(word: word)
             }
             
-            // organize entropy data
-            decodedBits.append(contentsOf: to11Bits(fromByte: index))
+            // each mnemonic word represents 11 bits
+            // a unit member of the data represents 8 bits
+            // iterate each word, decode as 11 bits and fill the data which is 8bit-based array
+            var decodedBits = index
+            for _ in 0..<11 {
+                unitByteIdx += 1
+                
+                // streaming direction: higher bit first
+                let unitBits = decodedBits & 0b1_00000_00000
+                if (unitBits == 0b1_00000_00000) {
+                    unitByte += 1
+                }
+                
+                if (bitIdx < entropyBitLength && unitByteIdx == 8 || bitIdx == entropyBitLength - 1) {
+                    entropyBits.append(unitByte)
+                    unitByteIdx = 0
+                    unitByte = 0
+                } else if (bitIdx >= entropyBitLength && unitByteIdx == 8 || bitIdx == fullBitLength - 1) {
+                    expectedChecksumBits.append(unitByte)
+                    unitByteIdx = 0
+                    unitByte = 0
+                } else {
+                    unitByte <<= 1
+                }
+                
+                decodedBits <<= 1
+                bitIdx += 1
+            }
         }
 
-        // 2. Checksum correctness
-
-        let entropyBitLength = decodedBits.count * 32 / 33
-        let entropyBits = Array(decodedBits[..<entropyBitLength])
-        let expectedChecksumBits = Array(decodedBits[entropyBitLength...])
-
-        let checksum = toBits(fromByte: toData(fromBits: entropyBits).sha256())
+        // derive checksum, and pick the first checksumBitLength bits
+        let checksum = entropyBits.sha256()
+        var checksumBits = Data()
+        var checksumBitIdx = 0
+        var isFinished = false
         
-        guard expectedChecksumBits == Array(checksum[0..<decodedBits.count / 33]) else {
+        for data in checksum {
+            var currData = data
+            var unitByte: UInt8 = 0
+            for _ in 0..<8 {
+                let currBit = currData & 0b10000000
+                if (currBit == 0b10000000) {
+                    unitByte += 1
+                }
+                
+                if (checksumBitIdx == checksumBitLength - 1) {
+                    checksumBits.append(unitByte)
+                    isFinished = true
+                    break
+                }
+                
+                checksumBitIdx += 1
+                unitByte <<= 1
+                currData <<= 1
+            }
+            
+            if (isFinished) {
+                break
+            } else {
+                checksumBits.append(unitByte)
+            }
+        }
+        
+        guard expectedChecksumBits == checksumBits else {
             throw MnemonicsError.checksumMismatch
         }
     }
-}
-
-func to11Bits(fromByte byte: UInt16) -> [Bit] {
-    var byte = byte
-    let count = 11
-    
-    var bits = [Bit](repeating: .zero, count: count)
-
-    for i in 0..<count {
-        let currentBit = byte & 0x01
-        if currentBit != 0 {
-            bits[count - 1 - i] = .one
-        }
-
-        byte >>= 1
-    }
-
-    return bits
-}
-
-func toBits(fromByte: Data) -> [Bit] {
-    var bits = [Bit]()
-
-    for i in 0..<fromByte.count {
-        var unitByte = fromByte[i]
-        var convertedBits = [Bit](repeating: .zero, count: 8)
-
-        for bitIdx in 0..<8 {
-            let currentBit = unitByte & 0x01
-            if currentBit != 0 {
-                convertedBits[7 - bitIdx] = .one
-            }
-
-            unitByte >>= 1
-        }
-        
-        bits.append(contentsOf: convertedBits)
-    }
-
-    return bits
-}
-
-func toData(fromBits: [Bit]) -> Data {
-    var resultData = [UInt8]()
-    
-    for byteIdx in 0..<(fromBits.count / 8) {
-        var unitByte: UInt8 = 0
-        for bitIdx in 0..<8 {
-            let bit = fromBits[byteIdx * 8 + bitIdx]
-            if bit == .one {
-                unitByte |= (0x01 << (7 - bitIdx))
-            }
-        }
-        resultData.append(unitByte)
-    }
-    
-    return Data(resultData)
 }
 
 public func PBKDF2SHA512(password: [UInt8], salt: [UInt8]) -> Data {
