@@ -72,6 +72,22 @@ public class Trustline: Codable {
      false.
      */
     public var freezePeer: Bool?
+    
+    enum CodingKeys: String, CodingKey {
+        case account = "account"
+        case balance = "balance"
+        case currency = "currency"
+        case limit = "limit"
+        case limitPeer = "limit_peer"
+        case qualityIn = "quality_in"
+        case qualityOut = "quality_out"
+        case noRipple = "no_ripple"
+        case noRipplePeer = "no_ripple_peer"
+        case authorized = "authorized"
+        case peerAuthorized = "peer_authorized"
+        case freeze = "freeze"
+        case freezePeer = "freeze_peer"
+    }
 }
 
 /**
