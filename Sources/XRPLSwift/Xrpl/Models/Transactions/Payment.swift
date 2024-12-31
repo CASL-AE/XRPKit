@@ -124,7 +124,7 @@ public class Payment: BaseTransaction, XrplTransaction {
     public var deliverMax: Amount?
     
     public var date: Int?
-    public var hash: String?
+//    public var hash: String?
 
     enum CodingKeys: String, CodingKey {
         case amount = "Amount"
@@ -173,7 +173,7 @@ public class Payment: BaseTransaction, XrplTransaction {
         self.deliverMin = decoded.deliverMin
         self.deliverMax = decoded.deliverMax
         self.date = decoded.date
-        self.hash = decoded.hash
+//        self.hash = decoded.hash
         try super.init(json: json)
         try validateAmount()
     }
@@ -195,7 +195,7 @@ public class Payment: BaseTransaction, XrplTransaction {
         deliverMin = try values.decodeIfPresent(Amount.self, forKey: .deliverMin)
         deliverMax = try values.decodeIfPresent(Amount.self, forKey: .deliverMax)
         date = try values.decodeIfPresent(Int.self, forKey: .date)
-        hash = try values.decodeIfPresent(String.self, forKey: .hash)
+//        hash = try values.decodeIfPresent(String.self, forKey: .hash)
         try super.init(from: decoder)
         try validateAmount()
     }
