@@ -169,7 +169,13 @@ public class WalletSigner: Wallet {
     }
 
     public static func getDecodedTransaction(_ tx: String) -> Transaction {
-        let decoded: [String: AnyObject] = BinaryCodec.decode(tx)
+        var decoded: [String: AnyObject] = BinaryCodec.decode(tx)
+        
+        // DeliverMax를 Amount로 변환
+        if let deliverMax = decoded.removeValue(forKey: "DeliverMax") {
+            decoded["Amount"] = deliverMax
+        }
+        
         return try! Transaction(decoded)!
     }
 
